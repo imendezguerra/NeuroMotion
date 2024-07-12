@@ -8,3 +8,4 @@ figs/
 res/
 ckp/*.pth
 NeuroMotion/MSKlib/models/
+MSKlib
