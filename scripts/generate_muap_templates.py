@@ -3,7 +3,6 @@ import os
 import torch
 import time
 import pickle
-import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -21,7 +20,7 @@ from NeuroMotion.MNPoollib.mn_params import DEPTH, ANGLE, MS_AREA, NUM_MUS, mn_d
 from BioMime.models.generator import Generator
 from BioMime.utils.basics import update_config, load_generator
 from BioMime.utils.plot_functions import plot_muaps
-
+from utils import save_gen_data
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate EMG signals from movements')
@@ -207,33 +206,5 @@ if __name__ == '__main__':
 
     # Save MUAPs and parameters
     # -------------------------
-    # Save all
-    with h5py.File( os.path.join( os.getcwd(), args.res_path, f'sim_muaps_default_{args.muscle}_{num_mus}_{args.mov}_{mode}.hdf5'), 'w') as h5:
-        
-        # MUAPs
-        h5.create_dataset('time_samples', data = [])
-        h5.create_dataset('sim_muaps', data = muaps)
-        h5.create_dataset('spike_trains', data = [])
-        h5.create_dataset('emg', data = [])
-        
-        # BioMime parameters
-        biomime_params = h5.create_group('BioMime_params')
-        biomime_params.create_dataset('mode', data = args.mode)
-        biomime_params.create_dataset('ms_label', data = args.muscle)
-        biomime_params.create_dataset('num_mus', data = args.num_mus)
-        biomime_params.create_dataset('fs_muaps', data = fs_mov)
-        biomime_params.create_dataset('poses', data = poses)
-        biomime_params.create_dataset('durations', data = durations)
-        biomime_params.create_dataset('unit_lengths', data = changes['len'])
-        biomime_params.create_dataset('unit_cvs', data = changes['cv'])
-        biomime_params.create_dataset('unit_depths', data = changes['depth'])
-
-        # Neural model parameters
-        neural_params = h5.create_group('neural_params')
-        neural_params.create_dataset('fs_spikes', data = fs)
-        neural_params.create_dataset('num_fibres', data = num)
-        neural_params.create_dataset('depth', data = depth)
-        neural_params.create_dataset('angle', data = angle)
-        neural_params.create_dataset('iz', data = iz)
-        neural_params.create_dataset('cv', data = cv)
-        neural_params.create_dataset('length', data = length)
+    file_name = os.path.join( os.getcwd(), args.res_path, f'sim_muaps_default_{args.muscle}_{args.num_mus}_{args.mov}_{args.mode}.hdf5')
+    save_gen_data(file_name, muaps, args.mode, args.muscle, args.num_mus, fs_mov, poses, durations, changes, fs, num, depth, angle, iz, cv, length)
