@@ -11,7 +11,7 @@ from scipy.signal import butter, filtfilt
 from copy import copy
 
 import sys
-sys.path.append('.')
+# sys.path.append(os.environ['HOME'].join('NeuroMotion'))
 
 from NeuroMotion.MSKlib.MSKpose import MSKModel
 from NeuroMotion.MNPoollib.MNPool import MotoneuronPool
