@@ -48,12 +48,13 @@ if __name__ == '__main__':
     parser.add_argument('--sampling', default='default', type=str, help='distribution of motor unit properties')
     parser.add_argument('--iter', default=0, type=int, help='bootstrapping iteration')
     parser.add_argument('--angle', default=0, type=int, help='wrist angle')
-    parser.add_argument('--mvc_level', default=30, type=int, help='maximum voluntary contraction level')
     parser.add_argument('--dur_s', default=20, type=float, help='contraction duration in seconds')
-    parser.add_argument('--snr', default=30, type=int, help='signal-to-noise ratio in dB')
+    parser.add_argument('--mvc_level', default=30, type=int, help='maximum voluntary contraction level')
+    parser.add_argument('--snr_level', default=30, type=int, help='signal-to-noise ratio in dB')
     parser.add_argument('--path_save', default='./res/static', type=str, help='path to save the simulated contraction')
     args = parser.parse_args()
 
+    args.iter -= 1 # Fix for JOB_ARRAY_INDEX
     np.random.seed(args.iter)
 
     # Load data
@@ -132,9 +133,9 @@ if __name__ == '__main__':
 
     # Generate noise
     std_emg = emg_raw.std()
-    std_noise = std_emg * 10 ** (-args.snr/20)
+    std_noise = std_emg * 10 ** (-args.snr_level/20)
     noise = np.random.normal(loc=0, scale=1, size=emg_raw.shape) * std_noise
-    print(f'{args.snr} dB - mean noise: {noise.mean()}')
+    print(f'{args.snr_level} dB - std noise: {noise.std()}')
 
     # Apply noise
     emg = copy(emg_raw) + noise
@@ -149,7 +150,7 @@ if __name__ == '__main__':
     # Save data
     # ---------
     os.makedirs(args.path_save, exist_ok=True)
-    file_save = os.path.join( args.path_save, f'semg_{args.muscle}_static_prepro_{args.mvc_level}mvc_{args.snr}dB_bs{args.iter}.hdf5')
+    file_save = os.path.join( args.path_save, f'semg_{args.muscle}_static_prepro_{args.mvc_level}mvc_{args.snr_level}dB_bs{args.iter}.hdf5')
 
     data = {
         'emg': emg_filt,
