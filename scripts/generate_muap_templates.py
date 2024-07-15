@@ -20,7 +20,7 @@ from NeuroMotion.MNPoollib.mn_params import DEPTH, ANGLE, MS_AREA, NUM_MUS, mn_d
 from BioMime.models.generator import Generator
 from BioMime.utils.basics import update_config, load_generator
 from BioMime.utils.plot_functions import plot_muaps
-from loaders import save_gen_data
+from NeuroMotion.loaders import save_gen_data
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate EMG signals from movements')
