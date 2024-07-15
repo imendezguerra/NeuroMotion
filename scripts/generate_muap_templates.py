@@ -10,8 +10,10 @@ from easydict import EasyDict as edict
 from scipy.signal import butter, filtfilt
 from copy import copy
 
-import sys
-# sys.path.append(os.environ['HOME'].join('NeuroMotion'))
+# For better access install NeuroMotion using: pip install -e .
+# If not, add the path to the NeuroMotion folder
+# import sys
+# sys.path.append(os.path.join(os.environ['HOME'], 'NeuroMotion'))
 
 from NeuroMotion.MSKlib.MSKpose import MSKModel
 from NeuroMotion.MNPoollib.MNPool import MotoneuronPool
@@ -37,6 +39,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     cfg = update_config('./ckp/' + args.cfg)
+    num_mus = args.num_mus
 
     # Results path
     # ------------
@@ -74,7 +77,7 @@ if __name__ == '__main__':
 
     # Define anatomical properties (initial conditions for BioMime)
     # -------------------------------------------------------------
-    mn_pool = MotoneuronPool(args.num_mus, ms_label, **mn_default_settings)
+    mn_pool = MotoneuronPool(num_mus, ms_label, **mn_default_settings)
     fibre_density = 200     # 200 fibres per mm^2
     num_fb = np.round(MS_AREA[ms_label] * fibre_density)
     config = edict({
@@ -87,15 +90,15 @@ if __name__ == '__main__':
     })
     
     if args.mode == 'morph':
-        num, depth, angle, iz, cv, length, base_muaps = normalise_properties(db, args.num_mus, steps)
+        num, depth, angle, iz, cv, length, base_muaps = normalise_properties(db, num_mus, steps)
     else:
         properties = mn_pool.assign_properties(config, normalise=True)
-        num = torch.from_numpy(properties['num']).reshape(args.num_mus, 1).repeat(1, steps)
-        depth = torch.from_numpy(properties['depth']).reshape(args.num_mus, 1).repeat(1, steps)
-        angle = torch.from_numpy(properties['angle']).reshape(args.num_mus, 1).repeat(1, steps)
-        iz = torch.from_numpy(properties['iz']).reshape(args.num_mus, 1).repeat(1, steps)
-        cv = torch.from_numpy(properties['cv']).reshape(args.num_mus, 1).repeat(1, steps)
-        length = torch.from_numpy(properties['len']).reshape(args.num_mus, 1).repeat(1, steps)
+        num = torch.from_numpy(properties['num']).reshape(num_mus, 1).repeat(1, steps)
+        depth = torch.from_numpy(properties['depth']).reshape(num_mus, 1).repeat(1, steps)
+        angle = torch.from_numpy(properties['angle']).reshape(num_mus, 1).repeat(1, steps)
+        iz = torch.from_numpy(properties['iz']).reshape(num_mus, 1).repeat(1, steps)
+        cv = torch.from_numpy(properties['cv']).reshape(num_mus, 1).repeat(1, steps)
+        length = torch.from_numpy(properties['len']).reshape(num_mus, 1).repeat(1, steps)
 
     # Save plot
     fig, axs = plt.subplots(2,3)
@@ -105,11 +108,15 @@ if __name__ == '__main__':
         axs[i].set_ylabel(key)
     plt.suptitle(args.muscle)
     plt.tight_layout()
-    fig.savefig(f'{args.res_path}/{args.muscle}_properties_{args.num_mus}_default.jpg')
+    fig.savefig(f'{args.res_path}/{args.muscle}_properties_{num_mus}_default.jpg')
 
     # OpenSim modulation
     # ------------------
-    msk = MSKModel()
+    msk = MSKModel(
+        model_path = os.path.join(os.environ['HOME'], 'NeuroMotion/NeuroMotion/MSKlib/models/'),
+        model_name= 'Hand_Wrist_Model_for_development.osim',
+        default_pose_path = os.path.join(os.environ['HOME'], 'NeuroMotion/NeuroMotion/MSKlib/models/poses.csv')
+        )
     msk.sim_mov(fs_mov, poses, durations)
 
     # Load joint angles from file
@@ -206,5 +213,5 @@ if __name__ == '__main__':
 
     # Save MUAPs and parameters
     # -------------------------
-    file_name = os.path.join( os.getcwd(), args.res_path, f'sim_muaps_default_{args.muscle}_{args.num_mus}_{args.mov}_{args.mode}.hdf5')
-    save_gen_data(file_name, muaps, args.mode, args.muscle, args.num_mus, fs_mov, poses, durations, changes, fs, num, depth, angle, iz, cv, length)
+    file_name = os.path.join( os.getcwd(), args.res_path, f'sim_muaps_default_{args.muscle}_{num_mus}_{args.mov}_{args.mode}.hdf5')
+    save_gen_data(file_name, muaps, args.mode, args.muscle, num_mus, fs_mov, poses, durations, changes, fs, num, depth, angle, iz, cv, length)
