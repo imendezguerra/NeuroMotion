@@ -49,3 +49,30 @@ def load_gen_data(file_name):
             sim['neural_params'][key] = h5['neural_params'][key][()]
     
     return sim
+
+def save_sim_emg(file_save, data):
+
+    with h5py.File(file_save, 'w') as h5:
+
+        # Main variables
+        h5.create_dataset('emg', data = data['emg'])
+        h5.create_dataset('spikes', data = data['spikes'])
+        h5.create_dataset('spikes_muscles', data = data['spikes_muscles'])
+        h5.create_dataset('rms', data = data['rms'])
+        h5.create_dataset('noise', data = data['noise'])
+        h5.create_dataset('fs', data = data['fs'])
+        h5.create_dataset('force_profile', data = data['force_profile'])
+        h5.create_dataset('angle_profile', data = data['angle_profile'])
+        h5.create_dataset('timestamps', data = data['timestamps'])
+        h5.create_dataset('ch_map', data = data['ch_map'])
+
+
+def load_sim_emg(file_save):
+
+    data = dict.fromkeys(['emg','spikes','spikes_muscles','rms', 'noise','fs','angle_profile','force_profile','timestamps','ch_map'])
+
+    with h5py.File(file_save, 'r') as h5:
+        for key in data.keys():
+            data[key] = h5[key][()]
+
+    return data
