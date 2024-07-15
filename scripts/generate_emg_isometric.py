@@ -11,9 +11,6 @@ from NeuroMotion.MNPoollib.mn_params import mn_default_settings
 from NeuroMotion.MNPoollib.mn_utils import ensure_spikes_in_range, spikes_to_bin, generate_emg
 from NeuroMotion.loaders import load_gen_data, save_sim_emg
 
-%load_ext autoreload
-%autoreload 2
-
 # Functions
 # ---------
 def compute_rms(emg, timestamps, win_len_s, win_step_s, fs=2048):
