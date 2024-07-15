@@ -114,21 +114,39 @@ def normalise_properties(db, num_mus, steps=1):
 def get_cur_muap(muap_steps, cur_step, time_samples):
     return int(muap_steps * cur_step / time_samples)
 
-
-def plot_spike_trains(spikes, pth):
+    
+def plot_spike_trains(spikes, fs=None, ax=None, pth=None):
     """
-    spikes  list (index of spikes) in list (MUs)
-    pth     figure save path
+    Plot spike trains.
+
+    Args:
+        spikes (list): List of spike times for each unit.
+        fs (float, optional): Sampling frequency. Defaults to None.
+        ax (matplotlib.axes.Axes, optional): Axes object to plot on. Defaults to None.
+        pth (str, optional): Path to save the figure. Defaults to None.
+
+    Returns:
+        matplotlib.axes.Axes: The plotted axes object.
     """
 
-    fig = plt.figure()
+    if ax is None:
+        fig, ax = plt.subplots(1,1,figsize=(8,4))
     num_mu = len(spikes)
     for mu in range(num_mu):
-        spike = spikes[mu]
-        plt.vlines(spike, mu, mu + 0.5, linewidth=1.0)
-    plt.xlabel('Time in sample')
-    plt.ylabel('MU Index')
-    plt.savefig(pth)
+        spike = spikes[mu] #np.array(spikes[mu])
+        if fs is None:
+            ax.vlines(spike, mu, mu + 0.5, linewidth=1.0)
+        else:
+            ax.vlines(spike/fs, mu, mu + 0.5, linewidth=1.0)
+    if fs is None:
+        ax.set_xlabel('Time (samples)')
+    else:
+        ax.set_xlabel('Time (s)')
+    ax.set_ylabel('MU Index')
+    if pth:
+        plt.savefig(pth)
+
+    return ax
 
 
 def ensure_spikes_in_range(spikes, samples):
