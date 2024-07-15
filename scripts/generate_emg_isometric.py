@@ -2,6 +2,7 @@
 # -------
 import numpy as np
 import scipy
+from scipy import signal
 import os
 from copy import copy
 import argparse
@@ -47,9 +48,10 @@ if __name__ == '__main__':
     parser.add_argument('--sampling', default='default', type=str, help='distribution of motor unit properties')
     parser.add_argument('--iter', default=0, type=int, help='bootstrapping iteration')
     parser.add_argument('--angle', default=0, type=int, help='wrist angle')
-    parser.add_argument('--mvc_level', default=30, type=float, help='maximum voluntary contraction level')
-    parser.add_argument('--dur_s', default=30, type=float, help='contraction duration in seconds')
-    parser.add_argument('--snr', default=30, type=float, help='signal-to-noise ratio in dB')
+    parser.add_argument('--mvc_level', default=30, type=int, help='maximum voluntary contraction level')
+    parser.add_argument('--dur_s', default=20, type=float, help='contraction duration in seconds')
+    parser.add_argument('--snr', default=30, type=int, help='signal-to-noise ratio in dB')
+    parser.add_argument('--path_save', default='./res/static', type=str, help='path to save the simulated contraction')
     args = parser.parse_args()
 
     np.random.seed(args.iter)
@@ -87,6 +89,7 @@ if __name__ == '__main__':
     muscle_force = np.ones(args.dur_s * fs) * args.mvc_level
     angle_profile = np.ones(args.dur_s * fs) * args.angle
     timestamps = np.linspace(0, args.dur_s, args.dur_s * fs)
+    samples = len(timestamps)
     print('Contraction dynamics generated correctly')
 
     # Generate spike trains based on simulated properties
@@ -114,7 +117,7 @@ if __name__ == '__main__':
     # Store them
     muscle_mn = {
         'spikes': spikes,
-        'bin_spikes': spikes_to_bin(spikes, timestamps, fs),
+        'bin_spikes': spikes_to_bin(spikes, samples),
         'fr': fr,
     }
     print('Spike trains generated correctly')
@@ -122,7 +125,6 @@ if __name__ == '__main__':
     # Generate EMG signals
     # --------------------
     emg_raw = generate_emg(sim['muaps'], muscle_mn['spikes'], muap_angle_labels, angle_profile)
-    samples = len(timestamps)
 
     # Center EMG
     emg_raw -= emg_raw.mean(-1)[:,:,None]
@@ -138,25 +140,20 @@ if __name__ == '__main__':
     emg = copy(emg_raw) + noise
 
     # Preprocess EMG
-    sos = scipy.signal.butter(2, [20, 500], 'bandpass', fs=fs, output='sos')
-    emg_filt = scipy.signal.sosfiltfilt(sos, emg, axis=0)  
+    sos = signal.butter(2, [20, 500], 'bandpass', fs=fs, output='sos')
+    emg_filt = signal.sosfiltfilt(sos, emg, axis=0)  
     emg_filt -= emg_filt.mean(0)[None,:]
     rms_emg_filt = compute_rms(emg_filt, timestamps, 0.1, 0.1, fs)
     print('EMG signals generated correctly')
 
     # Save data
     # ---------
-    dir_save = os.path.join(
-        os.environ['HOME'], 
-        'NeuroMotion', 'res',
-        f'{args.muscle}_{args.mov}_{args.num_mus}mu_bs{args.iter}'
-    )
-    file_save = os.path.join( dir_save, f'semg_{args.muscle}_static_prepro_{args.mvc_level}mvc_{args.snr}dB_bs{args.iter}.hdf5')
-    os.makedirs(dir_save, exist_ok=True)
+    os.makedirs(args.path_save, exist_ok=True)
+    file_save = os.path.join( args.path_save, f'semg_{args.muscle}_static_prepro_{args.mvc_level}mvc_{args.snr}dB_bs{args.iter}.hdf5')
 
     data = {
         'emg': emg_filt,
-        'spikes': muscle_mn['spikes'],
+        'spikes': muscle_mn['bin_spikes'],
         'spikes_muscles': [args.muscle] * args.num_mus,
         'rms': rms_emg_filt.mean(-1),
         'noise': noise,

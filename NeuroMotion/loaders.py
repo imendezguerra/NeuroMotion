@@ -52,12 +52,15 @@ def load_gen_data(file_name):
 
 def save_sim_emg(file_save, data):
 
+    # Need to encode Unicode strings to ASCII for saving
+    ascii_spikes_muscles = [n.encode("ascii", "ignore") for n in data['spikes_muscles']]
+
     with h5py.File(file_save, 'w') as h5:
 
         # Main variables
         h5.create_dataset('emg', data = data['emg'])
         h5.create_dataset('spikes', data = data['spikes'])
-        h5.create_dataset('spikes_muscles', data = data['spikes_muscles'])
+        h5.create_dataset('spikes_muscles', len(ascii_spikes_muscles), 'S10', ascii_spikes_muscles)
         h5.create_dataset('rms', data = data['rms'])
         h5.create_dataset('noise', data = data['noise'])
         h5.create_dataset('fs', data = data['fs'])
@@ -73,6 +76,9 @@ def load_sim_emg(file_save):
 
     with h5py.File(file_save, 'r') as h5:
         for key in data.keys():
-            data[key] = h5[key][()]
+            if key == 'spikes_muscles':
+                data[key] = [n.decode("ascii", "ignore") for n in h5[key][()]]
+            else:
+                data[key] = h5[key][()]
 
     return data
