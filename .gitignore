@@ -11,6 +11,7 @@ ckp/*.pkl
 NeuroMotion/MSKlib/models/
 MSKlib
 motor_unit_toolbox
+emg_toolbox
 jobs
 *egg-info
 .*
