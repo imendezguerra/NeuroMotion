@@ -11,7 +11,7 @@ The github code was adapted for your needs.
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from rc_lif_mod import RC_solve_func
+from NeuroMotion.MNPoollib.rc_lif_mod import RC_solve_func
 from scipy import signal
 from easydict import EasyDict as edict
 
