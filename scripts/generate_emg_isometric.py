@@ -54,7 +54,7 @@ if __name__ == '__main__':
     parser.add_argument('--path_save', default='./res/static', type=str, help='path to save the simulated contraction')
     args = parser.parse_args()
 
-    args.iter -= 1 # Fix for JOB_ARRAY_INDEX
+    args.iter -= 1 # Fix for JOB_ARRAY_INDEX (always > 0)
     np.random.seed(args.iter)
 
     # Load data
@@ -132,9 +132,9 @@ if __name__ == '__main__':
     emg_raw = emg_raw.reshape(chs, samples).T
 
     # Generate noise
-    std_emg = emg_raw.std()
+    std_emg = emg_raw.std(0)
     std_noise = std_emg * 10 ** (-args.snr_level/20)
-    noise = np.random.normal(loc=0, scale=1, size=emg_raw.shape) * std_noise
+    noise = np.random.normal(loc=np.zeros(chs), scale=std_noise, size=emg_raw.shape)
     print(f'{args.snr_level} dB - std noise: {noise.std()}')
 
     # Apply noise
